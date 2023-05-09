@@ -2,10 +2,12 @@ import numpy as np
 import gradio as gr
 import time
 
+from Database import Database
+
 header = """
-        # BI-VWM Semestral Project
-        ## Fagin Top-K Algorithm
-        Jan Černý, 2023
+        <h1 style="text-align: center">BI-VWM Semestral Project</h1>
+        <h2>Fagin Top-K Algorithm</h2>
+        <span>Jan Černý, 2023</span>
         """
 
 css = "footer {visibility: hidden}"
@@ -15,8 +17,8 @@ def submit():
     start_time = time.time()
 
     # Pause for 5 seconds to simulate long computation
-    time.sleep(5)
-
+    # time.sleep(5)
+    database = Database("./data/mouse.csv")
     data = {
         "data": [["John", 21, "Male"]],
         "headers": ["Name", "Age", "Gender"],
@@ -25,13 +27,11 @@ def submit():
     end_time = time.time()
     total_time = f"Time spent: {end_time - start_time:.10f}s"
 
-    return (data, total_time)
+    return (database.as_dict(), total_time)
 
 
-with gr.Blocks(
-    css=css, theme=gr.themes.Soft(primary_hue=gr.themes.colors.emerald)
-) as interface:
-    gr.Markdown(header)
+with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=gr.themes.colors.emerald)) as interface:
+    gr.HTML(header)
 
     with gr.Row().style(equal_height=True):
         with gr.Column(scale=1):
@@ -49,7 +49,7 @@ with gr.Blocks(
 
     submit_btn = gr.Button("Submit", variant="primary")
 
-    output = gr.Dataframe()
+    output = gr.Matrix(datatype=["str", "number", "number", "number", "number"], type="array")
     time_spent = gr.Markdown(f"Time spent: {0:.10f}s")
 
     submit_btn.click(
@@ -64,4 +64,5 @@ with gr.Blocks(
 # demo = interface
 
 if __name__ == "__main__":
+    # database = Database("./data/mouse.csv")
     interface.launch()
