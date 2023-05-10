@@ -23,6 +23,8 @@ theme = gr.themes.Soft(primary_hue=gr.themes.colors.emerald).set(
     background_fill_primary="#f5f6f7",
 )
 
+database = Database("./data/mouse.csv")
+
 
 def submit(k_value: int, algorithm: str, agg_function: str, agg_fields: list[str], normalized: bool):
     k_value = int(k_value)
@@ -37,8 +39,6 @@ def submit(k_value: int, algorithm: str, agg_function: str, agg_fields: list[str
         raise gr.Error("K must be greater than 0!")
 
     start_time = time.time()
-
-    database = Database("./data/mouse.csv")
 
     if algorithm == "Naive":
         data = Algorithm.top_k_naive(k_value, agg_function, agg_fields, database, normalized)
