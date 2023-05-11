@@ -23,7 +23,7 @@ theme = gr.themes.Soft(primary_hue=gr.themes.colors.emerald).set(
     background_fill_primary="#f5f6f7",
 )
 
-database = Database("./data/mouse.csv")
+database = None
 
 
 def submit(k_value: int, algorithm: str, agg_function: str, agg_fields: list[str], normalized: bool):
@@ -41,20 +41,31 @@ def submit(k_value: int, algorithm: str, agg_function: str, agg_fields: list[str
     start_time = time.time()
 
     if algorithm == "Naive":
-        data = Algorithm.top_k_naive(k_value, agg_function, agg_fields, database, normalized)
+        data, access_count = Algorithm.top_k_naive(k_value, agg_function, agg_fields, database, normalized)
     elif algorithm == "Fagin":
-        data = Algorithm.top_k_fagin(k_value, agg_function, agg_fields, database, normalized)
+        data, access_count = Algorithm.top_k_fagin(k_value, agg_function, agg_fields, database, normalized)
     else:
         raise gr.Error("Invalid algorithm")
 
     end_time = time.time()
     total_time = f"Time spent: {end_time - start_time:.10f}s"
+    access_count = f"Access count: {access_count}"
 
-    return (data, total_time)
+    return (data, total_time, access_count)
+
+
+def load_db(progress=gr.Progress()):
+    global database
+    database = Database("data/test.random.csv", progress=progress)
+    return "Loaded"
 
 
 with gr.Blocks(css=css, theme=theme) as interface:
     gr.HTML(header)
+
+    label = gr.Label("Loader")
+    db_btn = gr.Button("Load database")
+    db_btn.click(load_db, outputs=label)
 
     # Spacer
     gr.HTML("<br/><br/>")
@@ -103,11 +114,12 @@ with gr.Blocks(css=css, theme=theme) as interface:
         row_count=5,
     )
     time_spent = gr.Markdown(f"Time spent: {0:.10f}s")
+    access_count = gr.Markdown(f"Access count: {0}")
 
     submit_btn.click(
         submit,
         inputs=[k_value, algorithm, agg_function, agg_fields, normalized],
-        outputs=[output, time_spent],
+        outputs=[output, time_spent, access_count],
     )
 
 
@@ -117,6 +129,7 @@ with gr.Blocks(css=css, theme=theme) as interface:
 
 
 def main():
+    interface.queue()
     interface.launch()
 
     return

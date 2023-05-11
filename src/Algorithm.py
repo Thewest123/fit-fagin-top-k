@@ -18,9 +18,11 @@ class Algorithm:
 
         # Initialize top k list
         top_k = []
+        access_count = 0
 
         # Iterate through database
         for mouse in db.get_data_normalized():
+            access_count += 1
             # Calculate aggregate value
             agg_value = func(mouse, agg_fields)
 
@@ -33,7 +35,7 @@ class Algorithm:
         top_k.sort(key=lambda x: x[-1], reverse=True)
 
         # Return top k objects from top_k list
-        return top_k[:k]
+        return (top_k[:k], access_count)
 
     @classmethod
     def __get_agg_function(self, agg_function: str) -> callable:

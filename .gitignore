@@ -37,3 +37,6 @@ env.bak/
 venv.bak/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,venv
+
+### Random dataset ###
+data/*.random.csv

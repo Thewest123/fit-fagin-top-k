@@ -1,7 +1,9 @@
 import csv
 import numpy as np
+import gradio as gr
 
 from src.Mouse import Mouse
+from src.Utils import Utils
 
 
 class Database:
@@ -19,30 +21,55 @@ class Database:
     # ------------ [Public variables] ------------
 
     # ------------ [Private methods] ------------
-    def __init__(self, csv_path):
+    def __init__(self, csv_path, progress):
+        self.__progress = progress
+        self.__progress_value = 0
+        self.__progress_max = 10
+
+        print("Loading CSV...")
+        self.__progress_value += 1
+        progress((self.__progress_value, self.__progress_max), "Loading CSV...")
         self.__read_csv(csv_path)
+
+        print("Sorting lists...")
         self.__sort_lists()
 
-        self.__normalize(self.__sorted_by_weight, reverse=True)
-        self.__normalize(self.__sorted_by_accuracy)
-        self.__normalize(self.__sorted_by_dpi)
-        self.__normalize(self.__sorted_by_price, reverse=True)
+        print("Normalizing lists...")
+        self.__normalize(self.__sorted_by_weight, "weight", reverse=True)
+        self.__normalize(self.__sorted_by_accuracy, "accuracy")
+        self.__normalize(self.__sorted_by_dpi, "dpi")
+        self.__normalize(self.__sorted_by_price, "price", reverse=True)
 
-        for mouse in self.__data:
-            normalized_mouse = mouse
+        progress((self.__progress_value, self.__progress_max), "Done")
 
-            normalized_mouse.assign_normalized(
-                mouse.name,
-                self.__get_normalized_value(mouse, self.__sorted_by_weight),
-                self.__get_normalized_value(mouse, self.__sorted_by_accuracy),
-                self.__get_normalized_value(mouse, self.__sorted_by_dpi),
-                self.__get_normalized_value(mouse, self.__sorted_by_price),
-            )
+        # print("Normalizing dataset...")
+        # i = 0
+        # for mouse in self.__data:
+        #     print(f"Normalizing mouse {i}...")
+        #     i = i + 1
+        #     normalized_mouse = mouse
 
-            self.__data_normalized.append(normalized_mouse)
+        #     normalized_mouse.assign_normalized(
+        #         mouse.name,
+        #         self.__get_normalized_value(mouse, self.__sorted_by_weight),
+        #         self.__get_normalized_value(mouse, self.__sorted_by_accuracy),
+        #         self.__get_normalized_value(mouse, self.__sorted_by_dpi),
+        #         self.__get_normalized_value(mouse, self.__sorted_by_price),
+        #     )
+
+        #     self.__data_normalized.append(normalized_mouse)
+
+        print("Database loaded")
+
+        self.__data_normalized = self.__data
 
     def __get_normalized_value(self, value, list: list[tuple]) -> float:
         # Find value in list
+        # res = Utils.binary_search(list, value, lambda x: x[1])
+
+        # if res != -1:
+        #     return res[0]
+
         for i in range(len(list)):
             if list[i][1] == value:
                 return list[i][0]
@@ -78,29 +105,53 @@ class Database:
             "headers": self.__data_header,
         }
 
-    def __normalize(self, list: list[tuple], reverse=False):
+    def __normalize(self, list: list[tuple], attribute: str, reverse=False):
         minimum = min(list, key=lambda x: x[0])[0]
         maximum = max(list, key=lambda x: x[0])[0]
+        attribute = attribute + "_normalized"
+
+        self.__progress_value += 1
+        self.__progress((self.__progress_value, self.__progress_max), f"Normalizing {attribute}...")
 
         for i in range(len(list)):
             before = list[i][0]
             try:
                 if reverse:
                     list[i] = self.__update_tuple(list[i], 0, (maximum - before) / (maximum - minimum))
+                    setattr(list[i][1], attribute, (maximum - before) / (maximum - minimum))
                 else:
                     list[i] = self.__update_tuple(list[i], 0, (before - minimum) / (maximum - minimum))
+                    setattr(list[i][1], attribute, (before - minimum) / (maximum - minimum))
             except ZeroDivisionError:
                 # If all values are the same, set normalized value to 0.5
                 list[i] = self.__update_tuple(list[i], 0, 0.5)
+                setattr(list[i][1], attribute, 0.5)
+
+            setattr(list[i][1], "name_normalized", list[i][1].name)
 
             # print(f"Normalized {before} to {list[i][0]}")
 
     def __sort_lists(self):
         # Sort lists by 0th column in tuple
+
+        self.__progress_value += 1
+        self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by name...")
         self.__sorted_by_name.sort(key=lambda x: x[0])
+
+        self.__progress_value += 1
+        self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by weight...")
         self.__sorted_by_weight.sort(key=lambda x: x[0])
+
+        self.__progress_value += 1
+        self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by accuracy...")
         self.__sorted_by_accuracy.sort(key=lambda x: x[0], reverse=True)
+
+        self.__progress_value += 1
+        self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by dpi...")
         self.__sorted_by_dpi.sort(key=lambda x: x[0], reverse=True)
+
+        self.__progress_value += 1
+        self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by price...")
         self.__sorted_by_price.sort(key=lambda x: x[0])
 
     def __update_tuple(self, tuple: tuple, index: int, value):
