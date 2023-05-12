@@ -21,8 +21,8 @@ class Database:
 
     # ------------ [Private methods] ------------
     def __init__(self, csv_path, progress):
-        self.__progress_value = 0
-        self.__progress_max = 10
+        # self.__progress_value = 0
+        # self.__progress_max = 10
         self.__progress = progress
 
         print("Reading CSV file...")
@@ -60,7 +60,7 @@ class Database:
         with open(csv_path, newline="") as csvfile:
             reader = csv.reader(csvfile, quoting=csv.QUOTE_NONNUMERIC)
 
-            for row in reader:
+            for index, row in enumerate(reader):
                 # Read header
                 if not self.__data_header:
                     self.__data_header = row
@@ -77,8 +77,9 @@ class Database:
                 self.__sorted_by_dpi.append((mouse.dpi, mouse))
                 self.__sorted_by_price.append((mouse.price, mouse))
 
-                self.__progress_value += 1
-                self.__progress((self.__progress_value, self.__progress_max), f"Reading CSV file...")
+                # Update the progress bar every 100 lines
+                if index % 10000 == 0:
+                    self.__progress((index, estimated_line_count), f"Reading CSV file...")
 
     def as_dict(self):
         # Return dict with key `data` and `headers`

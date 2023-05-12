@@ -81,7 +81,9 @@ with gr.Blocks(css=css, theme=theme) as interface:
             db_btn = gr.Button("Load database")
 
         with gr.Column(scale=1, min_width=180):
-            db_label = gr.Textbox(label="Loaded database", readonly=True, placeholder="Nothing loaded yet...", lines=4)
+            db_label = gr.Textbox(
+                label="Loaded database", interactive=False, placeholder="Nothing loaded yet...", lines=4
+            )
 
     # Spacer
     gr.HTML("<br/><br/>")
