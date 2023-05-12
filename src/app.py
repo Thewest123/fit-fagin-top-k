@@ -29,10 +29,16 @@ database = None
 def submit(k_value: int, algorithm: str, agg_function: str, agg_fields: list[str], normalized: bool):
     k_value = int(k_value)
 
-    if not algorithm or not agg_function or not agg_fields:
-        raise gr.Error("Inputs cannot be empty!")
+    if not algorithm:
+        raise gr.Error("Algorithm must be selected!")
 
-    if len(agg_fields) < 2:
+    if not agg_function:
+        raise gr.Error("Aggregate function must be selected!")
+
+    if not agg_fields:
+        raise gr.Error("Aggregate fields must be selected!")
+
+    if len(agg_fields) < 1:
         raise gr.Error("At least 2 fields must be selected!")
 
     if k_value < 1:
@@ -54,18 +60,28 @@ def submit(k_value: int, algorithm: str, agg_function: str, agg_fields: list[str
     return (data, total_time, access_count)
 
 
-def load_db(progress=gr.Progress()):
+def load_db(csv_select, progress=gr.Progress()):
     global database
-    database = Database("data/test.random.csv", progress=progress)
-    return "Loaded"
+    database = Database("data/" + csv_select, progress=progress)
+    return {db_label: gr.update(value=csv_select), submit_btn: gr.update(interactive=True)}
 
 
 with gr.Blocks(css=css, theme=theme) as interface:
     gr.HTML(header)
 
-    label = gr.Label("Loader")
-    db_btn = gr.Button("Load database")
-    db_btn.click(load_db, outputs=label)
+    gr.Markdown("## Select database")
+    with gr.Row().style(equal_height=True):
+        with gr.Column(scale=1, min_width=180):
+            csv_select = gr.Dropdown(
+                label="CSV File",
+                info="Select CSV file to load into database",
+                choices=["mouse.csv", "test.random.csv"],
+                value="mouse.csv",
+            )
+            db_btn = gr.Button("Load database")
+
+        with gr.Column(scale=1, min_width=180):
+            db_label = gr.Textbox(label="Loaded database", readonly=True, placeholder="Nothing loaded yet...", lines=4)
 
     # Spacer
     gr.HTML("<br/><br/>")
@@ -99,7 +115,7 @@ with gr.Blocks(css=css, theme=theme) as interface:
 
     with gr.Row().style(equal_height=True):
         with gr.Column(scale=9):
-            submit_btn = gr.Button("Submit", variant="primary")
+            submit_btn = gr.Button("Submit", variant="primary", interactive=False)
 
         with gr.Column(scale=1, min_width=80):
             normalized = gr.Checkbox(label="Normalized", value=False)
@@ -115,6 +131,8 @@ with gr.Blocks(css=css, theme=theme) as interface:
     )
     time_spent = gr.Markdown(f"Time spent: {0:.10f}s")
     access_count = gr.Markdown(f"Access count: {0}")
+
+    db_btn.click(load_db, inputs=csv_select, outputs=[db_label, submit_btn])
 
     submit_btn.click(
         submit,

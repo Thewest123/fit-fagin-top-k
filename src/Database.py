@@ -1,6 +1,7 @@
 import csv
 import numpy as np
 import gradio as gr
+import os
 
 from src.Mouse import Mouse
 from src.Utils import Utils
@@ -18,18 +19,17 @@ class Database:
     __sorted_by_dpi = []
     __sorted_by_price = []
 
-    # ------------ [Public variables] ------------
-
     # ------------ [Private methods] ------------
     def __init__(self, csv_path, progress):
-        self.__progress = progress
         self.__progress_value = 0
         self.__progress_max = 10
+        self.__progress = progress
 
-        print("Loading CSV...")
-        self.__progress_value += 1
-        progress((self.__progress_value, self.__progress_max), "Loading CSV...")
+        print("Reading CSV file...")
         self.__read_csv(csv_path)
+
+        self.__progress_value = 1
+        self.__progress_max = 10
 
         print("Sorting lists...")
         self.__sort_lists()
@@ -40,43 +40,22 @@ class Database:
         self.__normalize(self.__sorted_by_dpi, "dpi")
         self.__normalize(self.__sorted_by_price, "price", reverse=True)
 
-        progress((self.__progress_value, self.__progress_max), "Done")
+        progress((self.__progress_value, self.__progress_max), "Database loaded!")
 
-        # print("Normalizing dataset...")
-        # i = 0
-        # for mouse in self.__data:
-        #     print(f"Normalizing mouse {i}...")
-        #     i = i + 1
-        #     normalized_mouse = mouse
-
-        #     normalized_mouse.assign_normalized(
-        #         mouse.name,
-        #         self.__get_normalized_value(mouse, self.__sorted_by_weight),
-        #         self.__get_normalized_value(mouse, self.__sorted_by_accuracy),
-        #         self.__get_normalized_value(mouse, self.__sorted_by_dpi),
-        #         self.__get_normalized_value(mouse, self.__sorted_by_price),
-        #     )
-
-        #     self.__data_normalized.append(normalized_mouse)
-
-        print("Database loaded")
+        print("Database loaded!")
 
         self.__data_normalized = self.__data
-
-    def __get_normalized_value(self, value, list: list[tuple]) -> float:
-        # Find value in list
-        # res = Utils.binary_search(list, value, lambda x: x[1])
-
-        # if res != -1:
-        #     return res[0]
-
-        for i in range(len(list)):
-            if list[i][1] == value:
-                return list[i][0]
 
     def __read_csv(self, csv_path):
         self.__data = []
         self.__data_header = []
+
+        file_size = os.path.getsize(csv_path)
+        LINE_SIZE = 30
+        estimated_line_count = file_size / LINE_SIZE
+        print(f"Estimated line count: {estimated_line_count}")
+
+        self.__progress_max = estimated_line_count
 
         with open(csv_path, newline="") as csvfile:
             reader = csv.reader(csvfile, quoting=csv.QUOTE_NONNUMERIC)
@@ -98,6 +77,9 @@ class Database:
                 self.__sorted_by_dpi.append((mouse.dpi, mouse))
                 self.__sorted_by_price.append((mouse.price, mouse))
 
+                self.__progress_value += 1
+                self.__progress((self.__progress_value, self.__progress_max), f"Reading CSV file...")
+
     def as_dict(self):
         # Return dict with key `data` and `headers`
         return {
@@ -110,8 +92,8 @@ class Database:
         maximum = max(list, key=lambda x: x[0])[0]
         attribute = attribute + "_normalized"
 
-        self.__progress_value += 1
         self.__progress((self.__progress_value, self.__progress_max), f"Normalizing {attribute}...")
+        self.__progress_value += 1
 
         for i in range(len(list)):
             before = list[i][0]
@@ -134,24 +116,24 @@ class Database:
     def __sort_lists(self):
         # Sort lists by 0th column in tuple
 
-        self.__progress_value += 1
         self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by name...")
+        self.__progress_value += 1
         self.__sorted_by_name.sort(key=lambda x: x[0])
 
-        self.__progress_value += 1
         self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by weight...")
+        self.__progress_value += 1
         self.__sorted_by_weight.sort(key=lambda x: x[0])
 
-        self.__progress_value += 1
         self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by accuracy...")
+        self.__progress_value += 1
         self.__sorted_by_accuracy.sort(key=lambda x: x[0], reverse=True)
 
-        self.__progress_value += 1
         self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by dpi...")
+        self.__progress_value += 1
         self.__sorted_by_dpi.sort(key=lambda x: x[0], reverse=True)
 
-        self.__progress_value += 1
         self.__progress((self.__progress_value, self.__progress_max), "Sorting lists by price...")
+        self.__progress_value += 1
         self.__sorted_by_price.sort(key=lambda x: x[0])
 
     def __update_tuple(self, tuple: tuple, index: int, value):
@@ -182,16 +164,3 @@ class Database:
 
     def get_sorted_price(self):
         return self.__sorted_by_price
-
-    def get_sorted_price_mouse_only(self):
-        mousecol = [mouse for price, mouse in self.__sorted_by_price]
-
-        # Convert Mouse objects to list of dicts
-        data = []
-        for mouse in mousecol:
-            data.append(mouse.as_list())
-
-        return {
-            "data": data,
-            "headers": self.__data_header,
-        }
