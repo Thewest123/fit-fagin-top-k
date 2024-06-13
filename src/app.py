@@ -61,6 +61,7 @@ def submit(k_value: int, algorithm: str, agg_function: str, agg_fields: list[str
 
 
 def load_db(csv_select, progress=gr.Progress()):
+    print("Loading database... " + csv_select)
     global database
     database = Database("data/" + csv_select, progress=progress)
     return {db_label: gr.update(value=csv_select), submit_btn: gr.update(interactive=True)}
@@ -70,7 +71,7 @@ with gr.Blocks(css=css, theme=theme) as interface:
     gr.HTML(header)
 
     gr.Markdown("## Select database")
-    with gr.Row().style(equal_height=True):
+    with gr.Row(equal_height=True):
         with gr.Column(scale=1, min_width=180):
             csv_select = gr.Dropdown(
                 label="CSV File",
@@ -89,7 +90,7 @@ with gr.Blocks(css=css, theme=theme) as interface:
     gr.HTML("<br/><br/>")
 
     gr.Markdown("## Select query parameters")
-    with gr.Row().style(equal_height=True):
+    with gr.Row(equal_height=True):
         with gr.Column(scale=1, min_width=180):
             algorithm = gr.Dropdown(
                 label="Algorithm",
@@ -115,7 +116,7 @@ with gr.Blocks(css=css, theme=theme) as interface:
                 value=["Accuracy", "Price"],
             )
 
-    with gr.Row().style(equal_height=True):
+    with gr.Row(equal_height=True):
         with gr.Column(scale=9):
             submit_btn = gr.Button("Submit", variant="primary", interactive=False)
 
@@ -153,7 +154,7 @@ def main():
     interface.launch()
 
     return
-    db = Database("./data/mouse.csv")
+    db = Database("data/mouse.csv")
 
     print("\n-------------- [ Sorted by accuracy ] --------------")
     print(*db.get_sorted_accuracy(), sep="\n")

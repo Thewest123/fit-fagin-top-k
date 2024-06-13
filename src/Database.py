@@ -1,6 +1,7 @@
 import csv
 import numpy as np
 import gradio as gr
+import math
 import os
 
 from src.Mouse import Mouse
@@ -52,7 +53,7 @@ class Database:
 
         file_size = os.path.getsize(csv_path)
         LINE_SIZE = 30
-        estimated_line_count = file_size / LINE_SIZE
+        estimated_line_count = math.ceil(file_size / LINE_SIZE)
         print(f"Estimated line count: {estimated_line_count}")
 
         self.__progress_max = estimated_line_count

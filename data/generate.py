@@ -10,7 +10,7 @@ if len(sys.argv) < 2:
     exit(1)
 
 size = int(sys.argv[1])
-path = "./data/random.csv"
+path = "./data/test.random.csv"
 
 with open(path, "w", newline="") as csvfile:
     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC, delimiter=",", quotechar='"')

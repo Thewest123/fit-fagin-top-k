@@ -11,7 +11,7 @@ Pro spuštění je potřeba mít nainstalovaný Python.
 1. Aplikace využívá další podpůrné balíčky, proto je vhodné si nejdříve vytvořit virtuální prostředí, například do složky `~/.venv` příkazem:
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 ```
 
 2. A aktivovat jej
@@ -19,7 +19,7 @@ python -m venv .venv
 ```shell
 .venv\Scripts\Activate.ps1 (PowerShell)
 .venv\Scripts\activate.bat (CMD)
-source .venv/Scripts/activate (Bash)
+source .venv/bin/activate (Bash)
 ```
 
 3. Nainstalovat balíčky (závislosti)
@@ -33,7 +33,17 @@ pip install -r requirements.txt
 Samotnou aplikaci lze spustit příkazem
 
 ```bash
-python main.py
+python3 main.py
 ```
+
+## Vygenerování dat
+
+Pro vygenerování většího množství testovacích dat lze využít příkaz
+
+```bash
+python3 data/generate.py 100000
+```
+
+Script vygeneruje 100000 řádků dat do souboru `data/test.random.csv`
 
 Webové rozhraní poté běží na adrese http://127.0.0.1:7860/
